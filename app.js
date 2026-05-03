@@ -1,9 +1,3 @@
-// ==============================
-//  Anti-PhishingZone — app.js
-//  Front-end phishing detection demo logic
-//  NOTE: Replace the analyzeText() function body with your
-//        real Python backend API call (fetch to your endpoint).
-// ==============================
 
 // ---- Tab switching ----
 document.querySelectorAll('.tab').forEach(tab => {
@@ -56,7 +50,7 @@ function clearInput() {
   document.getElementById('scan-input').value = '';
 }
 
-// ---- MAIN SCAN FUNCTION ----
+// ---- main scan function ----
 function runScan() {
   const activePanel = document.querySelector('.tab-panel.active').id;
   let inputText = '';

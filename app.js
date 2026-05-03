@@ -80,22 +80,6 @@ function runScan() {
   }, 1200);
 }
 
-// ==============================
-//  analyzeText(text)
-//  ─────────────────────────────
-//  DEMO / FRONT-END ONLY version.
-//  Replace this with a real fetch() call to your Python backend:
-//
-//  async function analyzeText(text) {
-//    const response = await fetch('/api/scan', {
-//      method: 'POST',
-//      headers: { 'Content-Type': 'application/json' },
-//      body: JSON.stringify({ input: text })
-//    });
-//    return await response.json();
-//    // expected: { score: 0-100, flags: [...], keywords: [...] }
-//  }
-// ==============================
 function analyzeText(text) {
   const lower = text.toLowerCase();
 

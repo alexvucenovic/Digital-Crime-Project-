@@ -1,255 +1,221 @@
-// ==============================
-//  Anti-PhishingZone — app.js
-//  Front-end phishing detection demo logic
-//  NOTE: Replace the analyzeText() function body with your
-//        real Python backend API call (fetch to your endpoint).
-// ==============================
+/* ============================================================
+   Anti-PhishingZone — app.js
+   ============================================================ */
 
-// ---- Tab switching ----
+// ── Tab switching ──────────────────────────────────────────
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
+    const target = tab.dataset.tab;
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     tab.classList.add('active');
-    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+    document.getElementById('panel-' + target).classList.add('active');
   });
 });
 
-// ---- Drag & Drop ----
-const dropZone = document.getElementById('drop-zone');
-const fileInput = document.getElementById('file-input');
+// ── Clear text ─────────────────────────────────────────────
+function clearInput() {
+  document.getElementById('scan-input').value = '';
+  document.getElementById('scan-input').focus();
+}
 
-dropZone.addEventListener('dragover', e => {
+// ── Drop zone ──────────────────────────────────────────────
+function handleDragOver(e) {
   e.preventDefault();
-  dropZone.classList.add('dragover');
-});
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-dropZone.addEventListener('drop', e => {
+  document.getElementById('drop-zone').classList.add('dragover');
+}
+function handleDragLeave() {
+  document.getElementById('drop-zone').classList.remove('dragover');
+}
+function handleDrop(e) {
   e.preventDefault();
-  dropZone.classList.remove('dragover');
+  document.getElementById('drop-zone').classList.remove('dragover');
   const file = e.dataTransfer.files[0];
-  if (file && file.type.startsWith('image/')) loadImagePreview(file);
-});
-fileInput.addEventListener('change', () => {
-  if (fileInput.files[0]) loadImagePreview(fileInput.files[0]);
+  if (file && file.type.startsWith('image/')) showPreview(file);
+}
+
+document.getElementById('file-input').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (file) showPreview(file);
 });
 
-function loadImagePreview(file) {
+function showPreview(file) {
   const reader = new FileReader();
-  reader.onload = (e) => {
-    document.getElementById('preview-img').src = e.target.result;
+  reader.onload = ev => {
+    document.getElementById('preview-img').src = ev.target.result;
+    document.getElementById('drop-zone').classList.add('hidden');
     document.getElementById('image-preview').classList.remove('hidden');
-    dropZone.classList.add('hidden');
   };
   reader.readAsDataURL(file);
 }
 
-function clearImage() {
+function clearImage(e) {
+  if (e) e.stopPropagation();
   document.getElementById('preview-img').src = '';
+  document.getElementById('file-input').value = '';
+  document.getElementById('drop-zone').classList.remove('hidden');
   document.getElementById('image-preview').classList.add('hidden');
-  dropZone.classList.remove('hidden');
-  fileInput.value = '';
 }
 
-// ---- Clear text input ----
-function clearInput() {
-  document.getElementById('scan-input').value = '';
-}
-
-// ---- MAIN SCAN FUNCTION ----
+// ── Run scan ───────────────────────────────────────────────
 function runScan() {
   const activePanel = document.querySelector('.tab-panel.active').id;
   let inputText = '';
 
   if (activePanel === 'panel-text') {
     inputText = document.getElementById('scan-input').value.trim();
-    if (!inputText) {
-      alert('Please paste some text, a URL, or a message to scan.');
-      return;
-    }
+    if (!inputText) { alert('Please paste some text or a URL to scan.'); return; }
   } else {
-    inputText = '[Image input — connect to OCR/backend]';
+    if (!document.getElementById('preview-img').src) {
+      alert('Please upload an image to scan.'); return;
+    }
+    inputText = '[IMAGE SCAN]';
   }
 
-  // -- Fake loading shimmer on button --
-  const btn = document.querySelector('.scan-btn');
-  const originalText = btn.innerHTML;
-  btn.innerHTML = '<span class="scan-btn-icon">⏳</span> Analyzing…';
+  const btn = document.querySelector('#panel-' + activePanel + ' .scan-button');
+  btn.textContent = 'Analyzing…';
   btn.disabled = true;
 
-  // Simulate async backend (replace with real fetch call below)
+  // ── BACKEND HOOK ──────────────────────────────────────────
+  // Replace the setTimeout below with a fetch() to Xaidyn's backend:
+  //
+  // fetch('/api/analyze', {
+  //   method: 'POST',
+  //   headers: { 'Content-Type': 'application/json' },
+  //   body: JSON.stringify({ text: inputText })
+  // })
+  // .then(r => r.json())
+  // .then(data => displayResults(data, inputText))
+  // .catch(err => { console.error(err); alert('Backend error.'); })
+  // .finally(() => { btn.textContent = 'Analyze Now'; btn.disabled = false; });
+  // ─────────────────────────────────────────────────────────
+
   setTimeout(() => {
-    btn.innerHTML = originalText;
-    btn.disabled = false;
     const result = analyzeText(inputText);
-    showResults(inputText, result);
-  }, 1200);
+    displayResults(result, inputText);
+    btn.textContent = activePanel === 'panel-text' ? 'Analyze Now' : '🔍 Analyze Image';
+    btn.disabled = false;
+  }, 900);
 }
 
-// ==============================
-//  analyzeText(text)
-//  ─────────────────────────────
-//  DEMO / FRONT-END ONLY version.
-//  Replace this with a real fetch() call to your Python backend:
-//
-//  async function analyzeText(text) {
-//    const response = await fetch('/api/scan', {
-//      method: 'POST',
-//      headers: { 'Content-Type': 'application/json' },
-//      body: JSON.stringify({ input: text })
-//    });
-//    return await response.json();
-//    // expected: { score: 0-100, flags: [...], keywords: [...] }
-//  }
-// ==============================
+// ── Placeholder analysis engine ────────────────────────────
 function analyzeText(text) {
-  const lower = text.toLowerCase();
-
-  // --- Keyword lists (based on common phishing patterns) ---
-  const highRiskKeywords = [
-    'verify your account', 'click here', 'update your information',
-    'urgent', 'suspended', 'confirm your identity', 'login immediately',
-    'your account has been', 'act now', 'limited time', 'reset your password',
-    'bank account', 'social security', 'credit card', 'paypal', 'wire transfer',
-    '.tk', '.ml', '.ga', '.cf', 'bit.ly', 'tinyurl', 'secure-login', 'webscr',
-    'account-verify', 'password reset', 'signin', 'password expired',
-    'you have won', 'prize', 'lottery', 'claim your', 'free gift'
+  const patterns = [
+    { pattern: /urgent|immediately|act now|limited time/i,                      label: 'Urgency language detected',             weight: 15 },
+    { pattern: /verify your account|confirm your (password|identity|details)/i, label: 'Account verification request',          weight: 20 },
+    { pattern: /click here|click the link/i,                                    label: 'Generic click-here prompt',             weight: 10 },
+    { pattern: /paypal|amazon|apple|microsoft|google|netflix|bank of america/i, label: 'Brand impersonation attempt',           weight: 20 },
+    { pattern: /\b(login|log-in|sign.?in)\b.{0,30}(link|here|below)/i,        label: 'Suspicious login redirect',             weight: 15 },
+    { pattern: /password|passwd|credentials/i,                                  label: 'Credential request detected',           weight: 18 },
+    { pattern: /\.ru|\.cn|\.xyz|\.tk|\.click|\.top/i,                          label: 'Suspicious TLD in URL',                 weight: 22 },
+    { pattern: /bit\.ly|tinyurl|goo\.gl|t\.co|ow\.ly/i,                        label: 'URL shortener detected',                weight: 12 },
+    { pattern: /you (have|won|are selected|are a winner)/i,                     label: 'Prize / reward scam language',          weight: 18 },
+    { pattern: /http:\/\//i,                                                    label: 'Unencrypted HTTP link (not HTTPS)',      weight: 14 },
+    { pattern: /suspended|disabled|locked|blocked/i,                            label: 'Account threat language',               weight: 16 },
+    { pattern: /\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/,                          label: 'Raw IP address in URL',                 weight: 25 },
+    { pattern: /free|win|prize|gift card|reward/i,                              label: 'Free offer / prize language',           weight: 10 },
+    { pattern: /dear (customer|user|member|account holder)/i,                   label: 'Generic greeting (non-personalised)',   weight: 8  },
   ];
 
-  const mediumRiskKeywords = [
-    'dear user', 'dear customer', 'valued customer', 'invoice attached',
-    'please respond', 'kindly', 'your order', 'tracking number',
-    'delivery failed', 'shipment', 'refund', 'unusual activity',
-    'verify', 'confirm', 'suspicious', 'security alert', 'http://'
-  ];
-
-  const found_high = highRiskKeywords.filter(kw => lower.includes(kw.toLowerCase()));
-  const found_med  = mediumRiskKeywords.filter(kw => lower.includes(kw.toLowerCase()));
-
-  // Score calculation
   let score = 0;
-  score += found_high.length * 18;
-  score += found_med.length * 8;
+  const triggered = [];
+  const flaggedWords = [];
 
-  // URL pattern checks
-  const urlPattern = /https?:\/\/[^\s]+/gi;
-  const urls = text.match(urlPattern) || [];
-  urls.forEach(url => {
-    if (/\d{1,3}\.\d{1,3}\.\d{1,3}/.test(url)) score += 20; // IP-based URL
-    if ((url.match(/\./g) || []).length > 3) score += 12;    // Many subdomains
-    if (/-(login|verify|secure|account|update)/i.test(url)) score += 15;
+  patterns.forEach(({ pattern, label, weight }) => {
+    if (pattern.test(text)) {
+      score += weight;
+      triggered.push(label);
+      const match = text.match(pattern);
+      if (match) flaggedWords.push(match[0]);
+    }
   });
 
-  // Exclamation points / all caps sections
-  const exclamations = (text.match(/!/g) || []).length;
-  score += Math.min(exclamations * 3, 12);
-
-  score = Math.min(100, score); // cap at 100
-
-  const allFound = [...new Set([...found_high, ...found_med])];
-
-  // Build flags list
-  const flags = [];
-  if (found_high.length)    flags.push(`${found_high.length} high-risk phishing keyword(s) detected`);
-  if (found_med.length)     flags.push(`${found_med.length} suspicious keyword(s) detected`);
-  if (urls.length)          flags.push(`${urls.length} URL(s) found in text`);
-  if (exclamations > 2)     flags.push('Excessive use of exclamation marks (urgency tactic)');
-  if (/dear (user|customer)/i.test(text)) flags.push('Generic greeting — legitimate services use your name');
-  if (score === 0)          flags.push('No phishing patterns found');
-
-  return { score, keywords: allFound, flags };
+  return { score: Math.min(score, 100), triggered, flaggedWords };
 }
 
-// ---- showResults ----
-function showResults(originalText, result) {
-  const { score, keywords, flags } = result;
+// ── Display results ────────────────────────────────────────
+function displayResults({ score, triggered, flaggedWords }, originalText) {
+  const section = document.getElementById('results');
+  section.classList.remove('hidden');
+  section.scrollIntoView({ behavior: 'smooth' });
 
-  // Scroll to / show results section
-  document.getElementById('results').classList.remove('hidden');
-  document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Determine risk tier — matching hero card colors and emojis exactly
+  let emoji, label, color, borderClass;
+  if (score < 30) {
+    emoji = '✓';       label = 'SAFE — Low Risk';    color = '#00c875'; borderClass = 'green';
+  } else if (score < 65) {
+    emoji = '⚡';      label = 'SUSPICIOUS — Medium Risk'; color = '#f0c040'; borderClass = 'yellow';
+  } else {
+    emoji = '⚠';       label = 'HIGH RISK — Phishing Detected'; color = '#ff3c5f'; borderClass = 'red';
+  }
 
-  // -- Animate risk bar --
+  // Update verdict card
+  const card = document.getElementById('result-card');
+  card.className = 'card result-card ' + borderClass;
+
+  document.getElementById('result-icon').textContent = emoji;
+
+  const valueEl = document.getElementById('result-value');
+  valueEl.textContent = label;
+  valueEl.style.color = color;
+
+  const pctBadge = document.getElementById('result-percent-badge');
+  pctBadge.style.color = color;
+
+  // Animated percent counter
+  let current = 0;
+  const tick = setInterval(() => {
+    current = Math.min(current + 2, score);
+    pctBadge.textContent = current + '%';
+    if (current >= score) clearInterval(tick);
+  }, 20);
+
+  // Meter
   setTimeout(() => {
-    document.getElementById('risk-fill').style.width  = score + '%';
-    document.getElementById('risk-thumb').style.left  = score + '%';
+    document.getElementById('risk-fill').style.width = score + '%';
+    document.getElementById('risk-thumb').style.left = score + '%';
   }, 100);
 
-  // -- Percent counter animation --
-  animateCounter('risk-percent', score);
-
-  // -- Badge & color indicator --
-  let label, color, ciDotColor, ciText;
-  if (score >= 65) {
-    label = '🚨 PHISHING';
-    color = 'var(--red)';
-    ciDotColor = 'var(--red)';
-    ciText = 'HIGH RISK — This content shows strong signs of a phishing attack. Do NOT click any links.';
-  } else if (score >= 30) {
-    label = '⚠ SUSPICIOUS';
-    color = 'var(--yellow)';
-    ciDotColor = 'var(--yellow)';
-    ciText = 'SUSPICIOUS — Treat this content with caution. Verify the sender independently.';
+  // Highlighted text
+  const highlightedBlock = document.getElementById('highlighted-block');
+  if (originalText !== '[IMAGE SCAN]' && flaggedWords.length > 0) {
+    highlightedBlock.classList.remove('hidden');
+    let html = originalText;
+    const seen = new Set();
+    flaggedWords.forEach(word => {
+      if (seen.has(word)) return;
+      seen.add(word);
+      const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      html = html.replace(new RegExp(escaped, 'gi'), `<span class="flag-word">$&</span>`);
+    });
+    document.getElementById('highlighted-text').innerHTML = html;
   } else {
-    label = '✓ CLEAR';
-    color = 'var(--green)';
-    ciDotColor = 'var(--green)';
-    ciText = 'CLEAR — No significant phishing patterns detected. Stay vigilant.';
+    highlightedBlock.classList.add('hidden');
   }
 
-  const badge = document.getElementById('risk-badge');
-  badge.textContent   = label;
-  badge.style.cssText = `background: ${color}22; border: 1px solid ${color}; color: ${color};`;
-
-  document.getElementById('risk-percent').style.color = color;
-
-  document.getElementById('ci-dot').style.background  = ciDotColor;
-  document.getElementById('ci-dot').style.boxShadow   = `0 0 12px ${ciDotColor}`;
-  document.getElementById('ci-text').textContent       = ciText;
-
-  // -- Highlighted text --
-  let highlighted = originalText;
-  keywords.forEach(kw => {
-    const regex = new RegExp(escapeRegex(kw), 'gi');
-    highlighted = highlighted.replace(regex, `<span class="flag-word">$&</span>`);
-  });
-  document.getElementById('highlighted-text').innerHTML =
-    highlighted.length ? highlighted : '<em style="color:var(--muted)">No text to highlight.</em>';
-
-  // -- Flags list --
-  const flagsList = document.getElementById('flags-list');
+  // Flags list
+  const flagsBlock = document.getElementById('flags-block');
+  const flagsList  = document.getElementById('flags-list');
   flagsList.innerHTML = '';
-  if (flags.length === 0) {
-    flagsList.innerHTML = '<li>No specific flags raised.</li>';
-  } else {
-    flags.forEach(f => {
+
+  if (triggered.length > 0) {
+    flagsBlock.classList.remove('hidden');
+    triggered.forEach(flag => {
       const li = document.createElement('li');
-      li.textContent = f;
+      li.textContent = flag;
       flagsList.appendChild(li);
     });
+  } else {
+    flagsBlock.classList.add('hidden');
   }
 }
 
-// ---- Reset ----
+// ── Reset ──────────────────────────────────────────────────
 function resetScan() {
   document.getElementById('results').classList.add('hidden');
+  document.getElementById('scan-input').value = '';
   document.getElementById('risk-fill').style.width = '0%';
   document.getElementById('risk-thumb').style.left = '0%';
-  document.getElementById('scan-input').value = '';
-  document.querySelector('#scan').scrollIntoView({ behavior: 'smooth' });
-}
-
-// ---- Helpers ----
-function animateCounter(id, target) {
-  const el = document.getElementById(id);
-  let current = 0;
-  const step = Math.ceil(target / 40);
-  const timer = setInterval(() => {
-    current = Math.min(current + step, target);
-    el.textContent = current + '%';
-    if (current >= target) clearInterval(timer);
-  }, 25);
-}
-
-function escapeRegex(str) {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  document.getElementById('result-percent-badge').textContent = '—';
+  document.getElementById('scan').scrollIntoView({ behavior: 'smooth' });
 }

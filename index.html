@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>Anti-PhishingZone — Phishing Detection</title>
+        <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
+        <link rel="stylesheet" href="styles.css"/>
+    </head>
+    <body>
+
+        <nav class="nav-bar">
+            <div class="logo">
+                <span class="text">ANTI-PHISHINGZONE</span>
+            </div>
+            <ul class="links">
+                <li><a href="#scan">SCAN</a></li>
+                <li><a href="#how">HOW IT WORKS</a></li>
+                <li><a href="#about">ABOUT US</a></li>
+            </ul>
+            <button class="scan">SCAN</button>
+        </nav>
+
+        <section class="descp" id="descp">
+            <div class="grid"></div>
+            <div class="content">
+                <h1 class="title">
+                    Anti-<br/>
+                    <span class="blurb2">Phishing</span><br/>
+                    ZONE
+                </h1>
+                <p class="blurb">
+                    Paste a suspected URL, email, or message. We'll scan it.
+                </p>
+                <a href="#scan" class="scan-btn">SCAN</a>
+            </div>
+            <div class="visuals">
+                <div class="card red">
+                    <span class="icon"></span>
+                    <div>
+                        <div class="label">High Risk </div>
+                        <div class="value-red">100% Phishing</div>
+                    </div>
+                </div>
+                <br/>
+                <div class="card yellow">
+                    <span class="icon"></span>
+                    <div>
+                        <div class="label">Suspicious</div>
+                        <div class="value-yellow">50% Risk</div>
+                    </div>
+                </div>
+                <br/>
+                <div class="card green">
+                    <span class="icon"></span>
+                    <div>
+                        <div class="label">Low</div>
+                        <div class="value-green">0% Risk</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="scanning" id="scan">
+            <div class="container-Scan">
+                <h2 class="titleS">Run a Phishing Scan</h2>
+                <p class="section-sub">Paste a URL, email body, suspicious message, or screenshot.</p>
+                <div class="tabs">
+                    <button class="tab active" data-tab="text"> Paste Text / URL</button>
+                    <button class="tab" data-tab="image"> Drop an Image</button>
+                </div>
+                <div class="tab-panel active" id="panel-text">
+                    <textarea
+                        id="scan-input"
+                        class="textarea"
+                        placeholder="Paste your suspicious URL, email content, or message here…"
+                        rows="10"
+                    ></textarea>
+                    <div class="scanner-actions">
+                        <button class="clear" onclick="clearInput()">Clear</button>
+                        <button class="scan-button" onclick="runScan()">Analyze Now</button>
+                    </div>
+                </div>
+                <div class="tab-panel" id="panel-image">
+                    <div class="drop-zone" id="drop-zone">
+                        <div class="drop-icon"></div>
+                        <div class="drop-title">Drag & Drop Screenshot Here</div>
+                        <div class="drop-sub">or click to browse — JPG, PNG, GIF accepted</div>
+                        <input type="file" id="file-input" accept="image/*" hidden/>
+                        <button class="browse-btn" onclick="document.getElementById('file-input').click()">Browse Files</button>
+                    </div>
+                    <div id="image-preview" class="image-preview hidden">
+                        <img id="preview-img" src="" alt="Uploaded screenshot"/>
+                        <button class="clear-btn" onclick="clearImage()">Remove Image</button>
+                        <button class="scan-button" onclick="runScan()">
+                            <span></span> Analyze Image
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="results-section hidden" id="results">
+            <div class="container-Scan">
+                <h2 class="titleS">Scan <span class="accent">Results</span></h2>
+
+                <div class="risk-meter-wrap">
+                    <div class="risk-label-top">RISK LEVEL</div>
+                    <div class="risk-track">
+                        <div class="risk-fill" id="risk-fill"></div>
+                        <div class="risk-thumb" id="risk-thumb"></div>
+                    </div>
+                    <div class="risk-scale">
+                        <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+                    </div>
+                    <div class="risk-badge" id="risk-badge">—</div>
+                    <div class="risk-percent" id="risk-percent">0%</div>
+                </div>
+
+                <div class="color-indicator">
+                    <div class="ci-dot" id="ci-dot"></div>
+                    <div class="ci-text" id="ci-text">Analyzing…</div>
+                </div>
+
+                <div class="result-block">
+                    <div class="result-block-title"> Highlighted Flags</div>
+                    <div class="highlighted-text" id="highlighted-text"></div>
+                </div>
+
+                <div class="result-block">
+                    <div class="result-block-title"> Detected Patterns</div>
+                    <ul class="flags-list" id="flags-list"></ul>
+                </div>
+
+                <button class="scan-again-btn" onclick="resetScan()"> Scan Another</button>
+            </div>
+        </section>
+
+        <section class="how-section" id="how">
+            <div class="container-Scan">
+                <h2 class="titleS">How It Works</h2>
+                <p class="section-sub">Three steps to find out.</p>
+                <div class="steps">
+                    <div class="step">
+                        <h3>You Submit</h3>
+                        <p>Paste a suspicious URL, email, or message — or drop in a screenshot.</p>
+                    </div>
+                    <div class="step-arrow">→</div>
+                    <div class="step">
+                        <h3>We Check</h3>
+                        <p>Our algorithm cross-references your input against known phishing patterns and keywords.</p>
+                    </div>
+                    <div class="step-arrow">→</div>
+                    <div class="step">
+                        <h3>You're Informed</h3>
+                        <p>Get a risk score, color indicator, and </br>highlighted keywords that explain exactly why it was flagged.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="about-section" id="about">
+            <div class="container-Scan">
+                <h2 class="titleS">About <span class="accent">Us</span></h2>
+                <p class="section-sub" style="max-width: 620px;">
+                    We're a team of four NJIT students — Xaidyn, Alexandra, Hiral, and Madeline — on a mission to make the internet safer. Unlike subscription-based tools, Anti-PhishingZone offers a one-time payment for full access. </p>
+                <div class="team-grid">
+                    <div class="team-card">
+                        <div class="team-initial">X</div>
+                        <div class="team-name">Xaidyn Liranzo</div>
+                        <div class="team-role">Project Manager · Coder</div>
+                    </div>
+                    <div class="team-card">
+                        <div class="team-initial">A</div>
+                        <div class="team-name">Alexandra Vucenovic</div>
+                        <div class="team-role">UI/UX · Coder</div>
+                    </div>
+                    <div class="team-card">
+                        <div class="team-initial">H</div>
+                        <div class="team-name">Hiral Zalavadia</div>
+                        <div class="team-role">Research · Slides</div>
+                    </div>
+                    <div class="team-card">
+                        <div class="team-initial">M</div>
+                        <div class="team-name">Madeline Fronhnhoefer</div>
+                        <div class="team-role">Research · Slides</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <div class="footer-logo">Anti-PhishingZone</div>
+            <p>© 2026 Anti-PhishingZone · Newark, NJ · antiPhisingzone2026@gmail.com</p>
+            <p class="footer-note">Built with HTML, CSS & JavaScript · NJIT IT 332</p>
+        </footer>
+        <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+        <script src="app.js"></script>
+    </body>
+</html>
